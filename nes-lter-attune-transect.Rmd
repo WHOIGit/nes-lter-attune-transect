@@ -1,7 +1,7 @@
 ---
-title: "Minimal EDI package generated using EMLassemblyline and ediutilities"
+title: "NES-LTER Attune flow cytometer data EDI package assembly"
 author: "Joe Futrelle"
-date: "2022-01-24"
+date: "Februrary 2022"
 output: html_notebook
 ---
 
@@ -16,21 +16,28 @@ Libraries used
 library(EMLassemblyline)
 library(ediutilities)
 library(here)
+library(readr)
 library(lubridate)
 ```
 
 Read example data table
 
 ```{r}
-data_table <- read.csv(here('nes-lter-minimal.csv'))
-data_table$date = ymd_hms(data_table$date)
+data_table <- merge_csv_directory(here('data'))
+data_table$datetime = ymd_hms(data_table$datetime)
+```
+
+```{r}
+# write the data file to a CSV
+data_table_filename <- 'data_table.csv'
+write_csv(data_table, here(data_table_filename), na='NaN')
 ```
 
 Read the Excel metadata template and generate text templates used by
 EMLassemblyline
 
 ```{r}
-excel_to_template(here('nes-lter-minimal-info'), 'nes-lter-minimal', rights='CC0')
+excel_to_template(here('nes-lter-attune-transect-info'), 'data_table', rights='CC0')
 ```
 Generate the package and insert the parent project node into the resulting EML
 
@@ -40,10 +47,10 @@ pkg_id <- 'knb-lter-nes.999.1'
 
 make_eml(here(),
          dataset.title='Demonstration of minimal EDI package',
-         data.table='nes-lter-minimal.csv',
+         data.table=data_table_filename,
          data.table.description='Example NES-LTER data',
          data.table.name = 'Subset of NES-LTER nutrient data',
-         temporal.coverage = temporal_coverage(data_table$date),
+         temporal.coverage = temporal_coverage(data_table$datetime),
          geographic.description = "NES-LTER Transect",
          geographic.coordinates = geographic_coordinates(data_table$latitude, data_table$longitude),
          maintenance.description = "ongoing",
